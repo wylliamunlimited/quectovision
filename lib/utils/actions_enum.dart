@@ -1,0 +1,4 @@
+enum QuectoAction {
+  SYMPTOM_PROFILING,
+  DISEASE_PREDICTION, 
+}
