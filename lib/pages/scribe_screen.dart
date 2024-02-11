@@ -172,9 +172,19 @@ class _ScribeScreenState extends State<ScribeScreen> {
             onPress: () {
               // recorder.stopRecorder();
               // recorder.dispositionStream();
+
+              if (_isRecording) {
+                checkFileExists();
+                scribe = Scribe.autoConstruct(tempPath, false, "", "");
+                print("Recording stopped");
+                _isRecording = false;
+                // recorder.pauseRecorder();
+                RecordMp3.instance.pause();
+              }
               RecordMp3.instance.stop();
 
               scribe.uploadedAudioToAZBlob(scribe.filepath, scribe.ID);
+              deleteTMPFile(tempPath);
               context.go('/loading/${scribe.ID}');
             },
           ),
@@ -219,5 +229,19 @@ class _ScribeScreenState extends State<ScribeScreen> {
     // );
 
     print("File exist? --> " + File(tempPath).existsSync().toString());
+  }
+
+  void deleteTMPFile(String path) {
+    File(path).exists().then((value) {
+      if (value) {
+        File(path).delete().then((_) {
+          print('File deleted successfully.');
+        }).catchError((error) {
+          print('Error deleting file: $error');
+        });
+      } else {
+        print("File does not exist.");
+      }
+    });
   }
 }

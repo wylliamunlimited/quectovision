@@ -6,7 +6,7 @@ import 'package:simple_ripple_animation/simple_ripple_animation.dart';
 
 class ProfileVisual extends StatefulWidget {
   final Patient patient;
-  final Map<String, String> symptom2location;
+  final Map<String, List<String>> symptom2location;
   // final List<String> highRiskDisease;
 
   const ProfileVisual({
@@ -67,19 +67,18 @@ class _ProfileVisualState extends State<ProfileVisual> {
 
   @override
   Widget build(BuildContext context) {
-    print("profile result list: ${widget.symptom2location.entries.toString()}");
-    for (var entry in widget.symptom2location.entries) {
-      print("${entry.key} --> ${entry.value}");
-      mappedLocation[entry.value] = true;
-      if (!clickables.containsKey(entry.value)) {
-        clickables[entry.value] = [];
-      }
-      clickables[entry.value]!.add(entry.key);
-    }
+    clickables = convertLocationToSymptoms(widget.symptom2location);
+    print("clickables: ${clickables.toString()}\n");
 
-    print("mappedlocations: ${mappedLocation.toString()}");
-    print("clickables: ${clickables.toString()}");
+    clickables.forEach((key, value) {
+      print(key);
+      if (mappedLocation.containsKey(key)) {
+        mappedLocation[key.toString()] = true;
+      }
+    });
+    print("mappedlocations: ${mappedLocation.toString()}\n");
     return Container(
+      margin: EdgeInsets.only(top: 100),
       child: Stack(
         children: [
           widget.patient.gender == "male"
@@ -110,6 +109,21 @@ class _ProfileVisualState extends State<ProfileVisual> {
         ],
       ),
     );
+  }
+
+  Map<String, List<String>> convertLocationToSymptoms(Map<String, List<String>> symptom2location) {
+    Map<String, List<String>> location2Symptoms = {};
+
+    symptom2location.forEach((key, value) {
+      for (String location in value) {
+        if (!location2Symptoms.containsKey(location)) {
+          location2Symptoms[location] = [];
+        }
+        location2Symptoms[location]!.add(key);
+      }
+    });
+    return location2Symptoms;
+    // FORMAT=> LOCATION: LIST<SYMPTOMS>
   }
 
   List<Widget> SymptomsHighlight() {

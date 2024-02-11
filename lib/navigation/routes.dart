@@ -37,7 +37,7 @@ final load_route = GoRoute(
 final profiling_route = GoRoute(
   path: "/profiling",
   builder: (context, state) {
-    final symptomProfile = state.extra! as Map<String, String>;
+    final symptomProfile = state.extra! as Map<String, List<String>>;
       return ProfilingScreen(symptomProfile: symptomProfile);}
   // pageBuilder: (context, state) {
   //   return FadeTransitionPage(

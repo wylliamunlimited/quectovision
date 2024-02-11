@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mvp/model/SymptomProfile.dart';
 import 'package:mvp/model/Transcript.dart';
-import 'package:mvp/pages/profiling_screen.dart';
-import 'package:mvp/utils/actions_enum.dart';
 import 'package:http/http.dart' as http;
 import 'package:simple_ripple_animation/simple_ripple_animation.dart';
 
@@ -34,7 +32,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
     String purifiedTranscript = "";
     Transcript transcript = Transcript(transcriptURL: "");
     List<String> symptoms = [];
-    Map<String, String> symptomLocations = {};
+    Map<String, List<String>> symptomLocations = {};
 
     Future.delayed(
       Duration(seconds: 3),
@@ -60,8 +58,6 @@ class _LoadingScreenState extends State<LoadingScreen> {
         purifiedTranscript =
             await transcript.getPurifiedTranscript(transcript.transcriptURL);
         symptoms = await transcriptToSymptoms(purifiedTranscript);
-
-        symptomLocations = await symptomLocate(symptoms);
       },
     ).whenComplete(() async {
       symptomLocations = await symptomLocate(symptoms);
@@ -222,7 +218,9 @@ class _LoadingScreenState extends State<LoadingScreen> {
     }
   }
 
-  Future<Map<String, String>> symptomLocate(List<String> symptoms) async {
+  Future<Map<String, List<String>>> symptomLocate(List<String> symptoms) async {
+    // OUTPUT MAP<SYMPTOM, LIST<Location>>
+
     var model_url =
         "https://quectollm.openai.azure.com/openai/deployments/quectoprofiling/chat/completions?api-version=2023-07-01-preview";
     var headers = {
@@ -235,10 +233,13 @@ class _LoadingScreenState extends State<LoadingScreen> {
         {
           "role": "system",
           "content":
-              "You are a clinical assistant who maps each symptom to the most relevant body parts only mentioned in the following list. It can only be in this list and not other output is accepted. head, nose, mouth, throat, forehead, eyes, face cheeks, ears, chin, neck, shoulders, biceps, forearms, hands, elbows, chest, abdomen, hip, groins, thighs, penis, vagina, knees, calfs, ankles, foot, glutes, upper back, lower back, wrist, anus, uterus, testicles, intestines"
+              "You are a clinical assistant who maps each symptom to the most relevant body parts only mentioned in the following list, one line for one symptom and strictly follow such format. It can only be in this list and not other output is accepted. head, nose, mouth, throat, forehead, eyes, face cheeks, ears, chin, neck, shoulders, biceps, forearms, hands, elbows, chest, abdomen, hip, groins, thighs, penis, vagina, knees, calfs, ankles, foot, glutes, upper back, lower back, wrist, anus, uterus, testicles, intestines"
         },
-        {"role": "user", "content": "[back pain, penis bleeding]"},
-        {"role": "assistant", "content": "upper back\nlower back\npenis"},
+        {"role": "user", "content": "back pain, penis bleeding"},
+        {
+          "role": "assistant",
+          "content": "back pain: upper back, lower back\npenis bleeding: penis"
+        },
         {"role": "user", "content": symptoms.toString()},
       ],
       "max_tokens": 800,
@@ -259,19 +260,31 @@ class _LoadingScreenState extends State<LoadingScreen> {
       Map<String, String> result = {};
 
       if (httpResponse.statusCode == 200) {
+        print("Raw Symptom Location Result: ${httpResponse.body}");
         response = json.decode(httpResponse.body);
       } else {
         throw Exception('Failed to load data');
       }
 
-      List<String> listresult =
+      List<String> listResultLines =
           response["choices"][0]["message"]["content"].split('\n');
-      for (int i = 0; i < listresult.length; i++) {
-        result[symptoms[i]] = listresult[i];
-      }
+      Map<String, String> symptom_disease = {};
+      listResultLines.forEach((element) {
+        List<String> key_val_pair = element.split(":");
+        if (key_val_pair.length == 2) {
+          symptom_disease[key_val_pair[0].trim()] = key_val_pair[1].trim();
+        }
+      });
 
-      print("Result Locations: ${result.toString()}");
-      return result;
+      Map<String, List<String>> finalSymptomLocateResult = {};
+      symptom_disease.forEach((key, value) {
+        List<String> valueList =
+            value.split(',').map((String item) => item.trim()).toList();
+        finalSymptomLocateResult[key] = valueList;
+      });
+
+      print("Result Locations: ${finalSymptomLocateResult.toString()}");
+      return finalSymptomLocateResult;
     } catch (error) {
       print(error);
       return {};
