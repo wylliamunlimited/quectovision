@@ -1,19 +1,13 @@
-# mvp
+# QuectoVision
 
-A new Flutter project.
+A taste of future healthcare :P
 
-## Getting Started
+Demo:
 
-This project is a starting point for a Flutter application.
 
-A few resources to get you started if this is your first Flutter project:
+https://github.com/wylliamunlimited/quectovision/assets/113057252/9e550e62-00ec-4a0d-b50b-541bf922fd08
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
 
 Datasets:
 - https://springernature.figshare.com/collections/A_dataset_of_simulated_patient-physician_medical_interviews_with_a_focus_on_respiratory_cases/5545842/1
